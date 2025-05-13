@@ -1,5 +1,8 @@
 Write-Host "Starting Temporal Learning project..." -ForegroundColor Green
 
+# Get the directory where the script is located
+$scriptDir = $PSScriptRoot
+
 # Ensure temporal-docker network exists
 $networkExists = docker network ls | Select-String -Pattern "temporal-network"
 if (-not $networkExists) {
@@ -16,7 +19,7 @@ $env:ELASTICSEARCH_VERSION = "7.16.2"
 
 # Start Temporal server
 Write-Host "Starting Temporal Server..." -ForegroundColor Yellow
-Push-Location -Path "temporal-docker"
+Push-Location -Path (Join-Path $scriptDir "temporal-docker")
 docker-compose up -d
 Pop-Location
 
@@ -26,7 +29,9 @@ Start-Sleep -Seconds 15
 
 # Start the worker
 Write-Host "Starting worker..." -ForegroundColor Yellow
+Push-Location -Path $scriptDir
 docker-compose up -d worker
+Pop-Location
 
 # Start the dev environment
 Write-Host "Starting development environment..." -ForegroundColor Yellow

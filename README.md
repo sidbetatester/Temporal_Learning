@@ -1,6 +1,33 @@
 # Temporal TypeScript Docker Example
 
-This project demonstrates how to run a Temporal application in Docker with TypeScript.
+This project demonstrates how to run a Temporal application in Docker with TypeScript. Temporal is a microservice orchestration platform that simplifies building reliable, fault-tolerant applications. This example provides a complete development environment with:
+
+- A fully configured Temporal server running in Docker
+- TypeScript SDK integration for creating workflows and activities
+- Docker Compose setup for local development and testing
+- Example workflow and activity implementations
+- Multi-container architecture showing proper service separation
+- Monitoring and observability tools (Prometheus, Grafana)
+- PowerShell scripts for easy startup and shutdown
+
+Whether you're new to Temporal or looking to set up a TypeScript project with Docker, this repository provides everything needed to start building durable, resilient workflows.
+
+## GitHub Repository
+
+This project is available on GitHub: [https://github.com/sidbetatester/Temporal_Learning](https://github.com/sidbetatester/Temporal_Learning)
+
+### Cloning the Repository
+
+```bash
+# Clone the repository
+git clone https://github.com/sidbetatester/Temporal_Learning.git
+
+# Change to the project directory
+cd Temporal_Learning
+
+# Start the project using the PowerShell script
+.\Start-Project.ps1
+```
 
 ## Project Structure
 
@@ -26,6 +53,40 @@ Temporal_Learning/
 ## Prerequisites
 
 - [Docker](https://www.docker.com/get-started) and Docker Compose
+- [Git](https://git-scm.com/downloads) for cloning the repository
+- [PowerShell](https://github.com/PowerShell/PowerShell) (version 5.1 or higher) to run the scripts
+- At least 4GB of available RAM for Docker
+- The following ports available on your local machine:
+  - 7233: Temporal Server gRPC
+  - 8080: Temporal Web UI
+  - 3306: MySQL
+  - 3000: Development environment
+
+No local Node.js installation is required as everything runs inside Docker containers.
+
+## Cross-Platform Compatibility
+
+This project works on Windows, macOS, and Linux:
+
+### Windows
+- Run PowerShell scripts directly: `.\Start-Project.ps1`
+
+### macOS and Linux
+- Make sure PowerShell Core is installed: `brew install --cask powershell` (macOS) or follow [Linux installation](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux)
+- Run scripts with explicit PowerShell command: `pwsh ./Start-Project.ps1`
+- Alternatively, you can run the Docker Compose commands directly:
+  ```bash
+  # Create network
+  docker network create temporal-network
+  
+  # Start Temporal server
+  cd temporal-docker
+  docker-compose up -d
+  cd ..
+  
+  # Start worker and development environment
+  docker-compose up -d worker dev
+  ```
 
 ## Getting Started
 
@@ -238,3 +299,27 @@ It's important to distinguish between different database components in this proj
    - Examples: product databases, user databases, transaction systems, etc.
 
 When integrating Temporal with an existing project, you keep Temporal's internal databases as-is while connecting your workflows/activities to your application's existing databases.
+
+## Contributing
+
+Contributions are welcome! Here's how you can contribute to this project:
+
+1. **Fork the repository**
+2. **Create a feature branch**:
+   ```
+   git checkout -b feature/your-feature-name
+   ```
+3. **Make your changes**
+4. **Submit a pull request**
+
+Please ensure your code follows the existing style patterns and includes appropriate documentation.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgements
+
+- This project includes [temporal-docker](https://github.com/temporalio/docker-compose), which is maintained by Temporal Technologies Inc.
+- Temporal is an open-source project licensed under the MIT License.
+- Special thanks to the Temporal community for their excellent documentation and examples.
