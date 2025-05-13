@@ -1,0 +1,117 @@
+version: "3.5"
+
+services:
+  # Temporal Server
+  temporal:
+    container_name: temporal
+    image: temporalio/docker-compose-auto-setup:latest
+    ports:
+      - 7233:7233  # gRPC
+      - 8233:8233  # Web UI
+    environment:
+      - CASSANDRA_SEEDS=
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+      - LOG_LEVEL=debug,info
+    networks:
+      - temporal-network
+
+  # MySQL
+  mysql:
+    container_name: temporal-mysql
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=temporal
+    ports:
+      - "3306:3306"
+    networks:
+      - temporal-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  # Temporal Web UI
+  temporal-ui:
+    container_name: temporal-ui
+    image: temporalio/ui:2.18.0
+    ports:
+      - "8080:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - temporal
+    networks:
+      - temporal-network
+
+  # Our Temporal Worker
+  worker:
+    container_name: temporal-worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    volumes:
+      - ./src:/app/src
+    networks:
+      - temporal-network
+
+  # Client for executing workflows
+  client:
+    container_name: temporal-client
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    volumes:
+      - ./src:/app/src
+    networks:
+      - temporal-network
+    entrypoint: ["npx", "ts-node", "src/client.ts"]
+    depends_on:
+      - worker
+
+  # Development environment
+  dev:
+    container_name: temporal-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+    ports:
+      - "3000:3000"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    networks:
+      - temporal-network
+    entrypoint: ["npm", "run", "build:watch"]
+    tty: true
+    stdin_open: true
+
+  # Temporal Admin Tools
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.21.5
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+
+networks:
+  temporal-network:
+    external: true
+    name: temporal-network
+
+volumes:
+  mysql-data: 

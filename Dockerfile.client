@@ -1,0 +1,21 @@
+FROM node:18-bullseye
+
+# Create app directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install all dependencies
+RUN npm install
+
+# Copy configuration files
+COPY tsconfig.json ./
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV TEMPORAL_ADDRESS=temporal:7233
+
+# The entrypoint is defined in the docker-compose.yml file
+# which will run the client
+CMD ["npx", "ts-node", "src/client.ts"] 

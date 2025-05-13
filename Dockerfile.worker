@@ -1,0 +1,38 @@
+FROM node:18-bullseye
+
+# Create app directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies for TypeScript compilation)
+RUN npm install
+
+# Install required system dependencies for @temporalio/core-bridge
+RUN apt-get update && apt-get install -y \
+    libc6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy source code and config files
+COPY tsconfig.json ./
+COPY src/ ./src/
+
+# Build TypeScript code
+RUN npm run build
+
+# Verify the build output exists
+RUN ls -la dist || echo "Dist directory not created"
+
+# Expose port if needed (not required for the worker but might be for health checks)
+EXPOSE 3000
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV TEMPORAL_ADDRESS=temporal:7233
+
+# Make sure build directory exists and show contents for debugging
+RUN mkdir -p dist && ls -la dist || true
+
+# Run the worker
+CMD ["node", "dist/worker.js"] 

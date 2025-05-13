@@ -1,0 +1,22 @@
+FROM node:18-bullseye
+
+# Create app directory
+WORKDIR /app
+
+# Install global development tools
+RUN npm install -g typescript ts-node nodemon
+
+# Create a package.json and install dependencies if not mounted
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Create dist directory inside container
+RUN mkdir -p dist
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV TEMPORAL_ADDRESS=temporal:7233
+
+# The entrypoint is set in docker-compose.yml
+# This container is flexible and can run various dev commands
+CMD ["npm", "run", "build:watch"] 
