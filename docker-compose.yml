@@ -1,4 +1,4 @@
-version: "3.5"
+
 
 services:
   # Temporal Server
@@ -13,7 +13,7 @@ services:
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
       - LOG_LEVEL=debug,info
     networks:
-      - temporal-network
+      - temporal-learning-network
 
   # MySQL
   mysql:
@@ -27,7 +27,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - temporal-network
+      - temporal-learning-network
     volumes:
       - mysql-data:/var/lib/mysql
 
@@ -43,9 +43,9 @@ services:
     depends_on:
       - temporal
     networks:
-      - temporal-network
+      - temporal-learning-network
 
-  # Our Temporal Worker
+  # Worker for running workflows
   worker:
     container_name: temporal-worker
     build:
@@ -56,7 +56,8 @@ services:
     volumes:
       - ./src:/app/src
     networks:
-      - temporal-network
+      - temporal-learning-network
+    restart: on-failure
 
   # Client for executing workflows
   client:
@@ -69,7 +70,7 @@ services:
     volumes:
       - ./src:/app/src
     networks:
-      - temporal-network
+      - temporal-learning-network
     entrypoint: ["npx", "ts-node", "src/client.ts"]
     depends_on:
       - worker
@@ -89,7 +90,7 @@ services:
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
     networks:
-      - temporal-network
+      - temporal-learning-network
     entrypoint: ["npm", "run", "build:watch"]
     tty: true
     stdin_open: true
@@ -104,14 +105,13 @@ services:
       - TEMPORAL_CLI_ADDRESS=temporal:7233
     image: temporalio/admin-tools:1.21.5
     networks:
-      - temporal-network
+      - temporal-learning-network
     stdin_open: true
     tty: true
 
 networks:
-  temporal-network:
+  temporal-learning-network:
     external: true
-    name: temporal-network
 
 volumes:
   mysql-data: 

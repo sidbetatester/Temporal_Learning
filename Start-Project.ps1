@@ -3,11 +3,18 @@ Write-Host "Starting Temporal Learning project..." -ForegroundColor Green
 # Get the directory where the script is located
 $scriptDir = $PSScriptRoot
 
-# Ensure temporal-docker network exists
-$networkExists = docker network ls | Select-String -Pattern "temporal-network"
-if (-not $networkExists) {
-    Write-Host "Creating temporal-network..." -ForegroundColor Yellow
-    docker network create temporal-network
+# First stop any existing containers
+Write-Host "Stopping any existing containers..." -ForegroundColor Yellow
+docker-compose down --remove-orphans
+Push-Location -Path (Join-Path $scriptDir "temporal-docker")
+docker-compose down --remove-orphans
+Pop-Location
+
+# Make sure no temporal containers are running (PowerShell friendly version)
+Write-Host "Cleaning up any leftover containers..." -ForegroundColor Yellow
+$temporalContainers = docker ps -a -q --filter "name=temporal"
+if ($temporalContainers) {
+    docker rm -f $temporalContainers
 }
 
 # Set environment variables for Temporal server
@@ -25,7 +32,7 @@ Pop-Location
 
 # Wait for Temporal server to be ready
 Write-Host "Waiting for Temporal server to be ready..." -ForegroundColor Yellow
-Start-Sleep -Seconds 15
+Start-Sleep -Seconds 30
 
 # Start the worker
 Write-Host "Starting worker..." -ForegroundColor Yellow
@@ -39,17 +46,33 @@ docker-compose up -d dev
 
 # Verify services are running
 Write-Host "Verifying services are running..." -ForegroundColor Yellow
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 10
 
-$temporal = docker ps | Select-String -Pattern "temporal " -Quiet
-$worker = docker ps | Select-String -Pattern "temporal-worker" -Quiet
-$ui = docker ps | Select-String -Pattern "temporal-ui" -Quiet
+$servers = docker ps --format "{{.Names}}"
+$requiredServices = @(
+    "temporal",
+    "temporal-ui",
+    "temporal-worker",
+    "temporal-postgresql",
+    "temporal-elasticsearch"
+)
 
-if ($temporal -and $worker -and $ui) {
+$missingServices = @()
+foreach ($service in $requiredServices) {
+    if ($servers -notcontains $service) {
+        $missingServices += $service
+    }
+}
+
+if ($missingServices.Count -eq 0) {
     Write-Host "All services are running successfully!" -ForegroundColor Green
 } else {
-    Write-Host "Warning: Some services may not be running properly." -ForegroundColor Red
+    Write-Host "Warning: Some services are not running properly:" -ForegroundColor Red
+    foreach ($service in $missingServices) {
+        Write-Host "  - $service is missing" -ForegroundColor Yellow
+    }
     Write-Host "Check status with: docker ps" -ForegroundColor Yellow
+    Write-Host "Check logs with: docker-compose logs" -ForegroundColor Yellow
 }
 
 Write-Host "Project started successfully!" -ForegroundColor Green

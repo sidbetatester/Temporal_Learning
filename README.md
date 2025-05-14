@@ -300,6 +300,18 @@ It's important to distinguish between different database components in this proj
 
 When integrating Temporal with an existing project, you keep Temporal's internal databases as-is while connecting your workflows/activities to your application's existing databases.
 
+## Integrating with Other Docker Projects
+
+This Temporal setup can be integrated with your existing Docker-based projects. For detailed instructions on how to connect your applications to this Temporal infrastructure, see the [Integration Guide](./integration-guide.md).
+
+The integration guide covers:
+- Adding the Temporal network to your project
+- Connecting to the Temporal server from your containers
+- Code examples for establishing connections
+- Troubleshooting connection issues
+
+This approach lets you maintain a single Temporal infrastructure that can be used by multiple projects.
+
 ## Contributing
 
 Contributions are welcome! Here's how you can contribute to this project:
